@@ -1,0 +1,2 @@
+// Firebase Storage disabled for Spark Plan compatibility.
+// Profile photos use client-side deterministic Initials Avatars (<Avatar />).

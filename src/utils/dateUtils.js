@@ -1,0 +1,25 @@
+/**
+ * Standard chronological 2026 month options for dropdown selectors across Gym ERP.
+ * Eliminates month shuffling.
+ */
+export const MONTH_OPTIONS = [
+  { value: '2026-01', label: 'January 2026' },
+  { value: '2026-02', label: 'February 2026' },
+  { value: '2026-03', label: 'March 2026' },
+  { value: '2026-04', label: 'April 2026' },
+  { value: '2026-05', label: 'May 2026' },
+  { value: '2026-06', label: 'June 2026' },
+  { value: '2026-07', label: 'July 2026' },
+  { value: '2026-08', label: 'August 2026' },
+  { value: '2026-09', label: 'September 2026' },
+  { value: '2026-10', label: 'October 2026' },
+  { value: '2026-11', label: 'November 2026' },
+  { value: '2026-12', label: 'December 2026' },
+];
+
+export const DEFAULT_MONTH = '2026-09';
+
+export const getMonthLabel = (monthValue) => {
+  const match = MONTH_OPTIONS.find(m => m.value === monthValue);
+  return match ? match.label : monthValue;
+};
