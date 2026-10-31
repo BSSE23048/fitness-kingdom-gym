@@ -44,9 +44,11 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Old cached profile fields must never restore an authenticated session.
-    for (const key of ['fk_owner_name', 'fk_owner_email', 'fk_owner_role', 'fk_user_uid']) {
-      localStorage.removeItem(key);
-    }
+    try {
+      for (const key of ['fk_owner_name', 'fk_owner_email', 'fk_owner_role', 'fk_user_uid']) {
+        localStorage.removeItem(key);
+      }
+    } catch { /* Storage restrictions must not prevent token verification. */ }
     const unsubscribe = onIdTokenChanged(auth, async (user) => {
       const request = ++generation.current;
       setCurrentUser(null);
