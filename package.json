@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test:rules": "node --test tests/firestore.rules.test.mjs",
-    "test:rules:ci": "firebase emulators:exec --only firestore --project demo-fitness-kingdom --config tests/firebase.json \"npm run test:rules\""
+    "test:rules:ci": "firebase emulators:exec --only firestore --project demo-fitness-kingdom --config firebase.test.json \"npm run test:rules\""
   },
   "dependencies": {
     "clsx": "^2.1.1",
