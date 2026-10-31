@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:rules": "node --test tests/firestore.rules.test.mjs",
+    "test:rules:ci": "firebase emulators:exec --only firestore --project demo-fitness-kingdom --config tests/firebase.json \"npm run test:rules\""
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -20,10 +22,13 @@
     "tailwind-merge": "^2.5.2"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.20",
+    "firebase-admin": "^14.5.0",
+    "firebase-tools": "^15.32.1",
     "postcss": "^8.4.45",
     "tailwindcss": "^3.4.11",
     "vite": "^5.4.3"

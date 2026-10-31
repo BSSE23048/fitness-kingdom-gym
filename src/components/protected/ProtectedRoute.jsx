@@ -4,10 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 
 /**
  * ProtectedRoute component for RBAC routing.
- * Checks for either active Firebase Auth user or authenticated demo session.
+ * Checks the owner session resolved from Firebase Auth token claims.
  */
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { currentUser, userData, userRole, loading } = useAuth();
+  const { currentUser, userRole, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -18,8 +18,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     );
   }
 
-  // Not logged in (neither Firebase user nor demo session) -> redirect to login
-  if (!currentUser && !userData) {
+  // Profile data alone cannot restore a session.
+  if (!currentUser) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

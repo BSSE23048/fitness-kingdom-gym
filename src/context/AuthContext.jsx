@@ -1,275 +1,109 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged 
-} from 'firebase/auth';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { signInWithEmailAndPassword, signOut, onIdTokenChanged, getIdTokenResult } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
 const AuthContext = createContext(null);
-
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
-/**
- * Maps Firebase Auth emails to dynamic Dual-Owner Display Names
- * (e.g., ahmad@fitnesskingdom.com -> "Ahmad", mohsin@fitnesskingdom.com -> "Mohsin")
- */
-export const resolveOwnerProfile = (user) => {
-  if (!user || !user.email) {
-    return { displayName: 'Gym Owner', role: 'OWNER' };
-  }
+// Display names are presentation only. Authorization comes from the token claim.
+export const resolveOwnerProfile = (user) => ({
+  displayName: user?.displayName || user?.email?.split('@')[0] || 'Gym Owner',
+  role: null,
+});
 
-  const emailLower = user.email.toLowerCase();
-  let displayName = user.displayName;
-
-  if (emailLower.includes('ahmad') || emailLower.includes('ahmed')) {
-    displayName = 'Ahmad';
-  } else if (emailLower.includes('mohsin')) {
-    displayName = 'Mohsin';
-  } else if (!displayName || displayName === 'Gym Owner') {
-    const prefix = emailLower.split('@')[0];
-    displayName = prefix.charAt(0).toUpperCase() + prefix.slice(1);
-  }
-
-  return {
-    displayName,
-    role: 'OWNER'
-  };
-};
-
-/**
- * Format Firebase Auth Error Codes into Clean User-Friendly Banners
- */
 export const formatAuthError = (err) => {
-  console.error('Firebase Auth Error:', err.code, err.message, err);
-
-  switch (err.code) {
+  switch (err?.code) {
     case 'auth/user-not-found':
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
-      return 'Invalid owner email or password. Please verify your credentials.';
+      return 'Invalid owner email or password.';
+    case 'auth/owner-required':
+      return 'This account has not been granted owner access. Contact the administrator.';
     case 'auth/invalid-email':
-      return 'Please enter a valid owner email address.';
+      return 'Enter a valid email address.';
     case 'auth/user-disabled':
-      return 'This owner account has been disabled. Please contact system administration.';
-    case 'auth/operation-not-allowed':
-      return 'Email/Password sign-in is not enabled in Firebase Console.';
-    case 'auth/api-key-not-valid':
-    case 'auth/invalid-api-key':
-      return 'Invalid Firebase API Key. Please verify VITE_FIREBASE_API_KEY configuration.';
+      return 'This account has been disabled.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please try again later.';
     default:
-      return err.message || 'Authentication failed. Please check your credentials and network connection.';
+      return 'Unable to sign in. Check your connection and try again.';
   }
 };
 
 export const AuthProvider = ({ children }) => {
-  // Synchronous client-side role & profile caching for INSTANT hydration without spinners
-  const [userRole, setUserRole] = useState(() => localStorage.getItem('fk_owner_role') || 'OWNER');
-
-  const [userData, setUserData] = useState(() => {
-    const cachedName = localStorage.getItem('fk_owner_name');
-    const cachedEmail = localStorage.getItem('fk_owner_email');
-    const cachedRole = localStorage.getItem('fk_owner_role') || 'OWNER';
-    const cachedUid = localStorage.getItem('fk_user_uid');
-
-    if (cachedName && cachedEmail) {
-      return {
-        uid: cachedUid || 'owner-uid',
-        email: cachedEmail,
-        displayName: cachedName,
-        role: cachedRole
-      };
-    }
-    return null;
-  });
-
-  const [currentUser, setCurrentUser] = useState(() => {
-    if (auth.currentUser) return auth.currentUser;
-    const cachedUid = localStorage.getItem('fk_user_uid');
-    const cachedEmail = localStorage.getItem('fk_owner_email');
-    if (cachedUid && cachedEmail) {
-      return { uid: cachedUid, email: cachedEmail };
-    }
-    return null;
-  });
-
-  // Fast loading resolution: if cached session exists, unblock loading state synchronously
-  const [loading, setLoading] = useState(() => {
-    const cachedUid = localStorage.getItem('fk_user_uid');
-    return !cachedUid && !auth.currentUser;
-  });
-
+  const [currentUser, setCurrentUser] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [isSyncingProfile, setIsSyncingProfile] = useState(false);
+  const generation = useRef(0);
 
-  // Background non-blocking profile sync with Firestore
-  const syncProfileInBackground = async (user) => {
-    if (!user) return;
-    setIsSyncingProfile(true);
-    try {
-      const userDocRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userDocRef);
-      const resolved = resolveOwnerProfile(user);
-
-      let profileData;
-      if (userSnap.exists()) {
-        const existingData = userSnap.data();
-        const finalName = existingData.displayName && existingData.displayName !== 'Gym Owner' 
-          ? existingData.displayName 
-          : resolved.displayName;
-
-        profileData = {
-          uid: user.uid,
-          email: user.email,
-          displayName: finalName,
-          role: existingData.role || 'OWNER',
-          ...existingData
-        };
-
-        if (existingData.displayName !== finalName) {
-          profileData.displayName = finalName;
-          await setDoc(userDocRef, { displayName: finalName, role: 'OWNER' }, { merge: true });
-        }
-      } else {
-        profileData = {
-          uid: user.uid,
-          email: user.email,
-          displayName: resolved.displayName,
-          role: 'OWNER',
-          createdAt: new Date().toISOString()
-        };
-        await setDoc(userDocRef, profileData, { merge: true });
-      }
-
-      setUserData(profileData);
-      setUserRole(profileData.role || 'OWNER');
-
-      // Update local storage for instant hydration on subsequent refreshes
-      localStorage.setItem('fk_owner_name', profileData.displayName);
-      localStorage.setItem('fk_owner_email', profileData.email);
-      localStorage.setItem('fk_owner_role', profileData.role || 'OWNER');
-      localStorage.setItem('fk_user_uid', profileData.uid);
-    } catch (err) {
-      console.warn('Background profile sync notice (using resolved auth profile):', err);
-      const resolved = resolveOwnerProfile(user);
-      const fallbackData = {
-        uid: user.uid,
-        email: user.email,
-        displayName: resolved.displayName,
-        role: 'OWNER'
-      };
-      setUserData(fallbackData);
-      setUserRole('OWNER');
-    } finally {
-      setIsSyncingProfile(false);
-    }
-  };
-
-  // Monitor Firebase Auth state in background
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
+    // Old cached profile fields must never restore an authenticated session.
+    for (const key of ['fk_owner_name', 'fk_owner_email', 'fk_owner_role', 'fk_user_uid']) {
+      localStorage.removeItem(key);
+    }
+    const unsubscribe = onIdTokenChanged(auth, async (user) => {
+      const request = ++generation.current;
+      setCurrentUser(null);
+      setUserData(null);
+      setLoading(true);
+      setIsSyncingProfile(false);
+      if (!user) { setLoading(false); return; }
+      try {
+        const token = await getIdTokenResult(user);
+        if (request !== generation.current) return;
+        if (token.claims.owner !== true) return;
         setCurrentUser(user);
-        setLoading(false);
-        syncProfileInBackground(user);
-      } else {
-        localStorage.removeItem('fk_owner_name');
-        localStorage.removeItem('fk_owner_email');
-        localStorage.removeItem('fk_owner_role');
-        localStorage.removeItem('fk_user_uid');
-        setCurrentUser(null);
-        setUserData(null);
-        setUserRole('OWNER');
-        setLoading(false);
+        setUserData({ uid: user.uid, email: user.email, ...resolveOwnerProfile(user), role: 'OWNER' });
+        setIsSyncingProfile(true);
+        try {
+          const snapshot = await getDoc(doc(db, 'users', user.uid));
+          if (request === generation.current && snapshot.exists()) {
+            const displayName = snapshot.data().displayName;
+            if (typeof displayName === 'string' && displayName.trim()) {
+              setUserData((current) => current && ({ ...current, displayName }));
+            }
+          }
+        } catch {
+          // An optional profile read must not create or escalate a role.
+        }
+      } catch {
+        if (request === generation.current) { setCurrentUser(null); setUserData(null); }
+      } finally {
+        if (request === generation.current) { setLoading(false); setIsSyncingProfile(false); }
       }
     });
-
-    return () => unsubscribe();
+    return () => { generation.current += 1; unsubscribe(); };
   }, []);
 
-  // Standard Production Email/Password Login via Firebase Auth
   const login = async (email, password) => {
-    setLoading(true);
-    try {
-      const res = await signInWithEmailAndPassword(auth, email, password);
-      const user = res.user;
-
-      const resolved = resolveOwnerProfile(user);
-      localStorage.setItem('fk_owner_name', resolved.displayName);
-      localStorage.setItem('fk_owner_email', user.email);
-      localStorage.setItem('fk_owner_role', 'OWNER');
-      localStorage.setItem('fk_user_uid', user.uid);
-
-      setCurrentUser(user);
-      setUserData({
-        uid: user.uid,
-        email: user.email,
-        displayName: resolved.displayName,
-        role: 'OWNER'
-      });
-      setUserRole('OWNER');
-      setLoading(false);
-
-      syncProfileInBackground(user);
-      return user;
-    } catch (err) {
-      setLoading(false);
-      throw err;
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    const token = await getIdTokenResult(user);
+    if (token.claims.owner !== true) {
+      await signOut(auth);
+      const error = new Error('Owner access required');
+      error.code = 'auth/owner-required';
+      throw error;
     }
+    return user;
   };
 
-  // Logout
   const logout = async () => {
-    setLoading(true);
-    localStorage.removeItem('fk_owner_name');
-    localStorage.removeItem('fk_owner_email');
-    localStorage.removeItem('fk_owner_role');
-    localStorage.removeItem('fk_user_uid');
-    try {
-      await signOut(auth);
-    } catch (e) {
-      console.warn('SignOut error:', e);
-    }
+    generation.current += 1;
     setCurrentUser(null);
     setUserData(null);
-    setUserRole('OWNER');
-    setLoading(false);
+    await signOut(auth);
   };
-
-  const value = {
-    currentUser,
-    userRole: userRole || 'OWNER',
-    userData,
-    loading,
-    isSyncingProfile,
-    login,
-    logout,
-    isOwner: (userRole || 'OWNER') === 'OWNER'
-  };
-
+  const userRole = currentUser ? 'OWNER' : null;
+  const value = { currentUser, userData, userRole, loading, isSyncingProfile, login, logout, isOwner: userRole === 'OWNER' };
   return (
     <AuthContext.Provider value={value}>
-      {/* Non-blocking background sync indicator */}
-      {isSyncingProfile && (
-        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-emerald-100/60 overflow-hidden pointer-events-none">
-          <div className="h-full bg-emerald-600 animate-pulse w-full origin-left transition-all duration-300"></div>
-        </div>
-      )}
-
-      {loading ? (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center transition-opacity duration-200">
-          <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="mt-3 text-xs font-semibold text-slate-500">Loading Owner Portal...</p>
-        </div>
-      ) : (
-        children
-      )}
+      {loading ? <div role="status" className="min-h-screen flex items-center justify-center">Checking owner access…</div> : children}
     </AuthContext.Provider>
   );
 };
