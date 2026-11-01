@@ -1,3 +1,4 @@
+import { isBeforeMembershipStart } from '../../utils/dateUtils';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -164,6 +165,16 @@ const FeeCollectionModule = () => {
         label: 'Paid ✅', 
         color: 'bg-emerald-100 text-emerald-800 border-emerald-300',
         payment: directPayment 
+      };
+    }
+
+    // Retain existing recorded payments, but never invent dues before joining.
+    if (isBeforeMembershipStart(member, selectedMonth)) {
+      return {
+        status: 'NOT_STARTED',
+        label: 'Not yet joined',
+        color: 'bg-slate-100 text-slate-600 border-slate-200',
+        dueAmount: 0
       };
     }
 
