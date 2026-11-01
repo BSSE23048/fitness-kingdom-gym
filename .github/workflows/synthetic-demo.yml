@@ -1,0 +1,25 @@
+name: Synthetic demo
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build -- --mode demo --outDir .audit/demo-dist
+      - run: npx firebase emulators:exec --only auth,firestore --project demo-fitness-kingdom --config firebase.demo.json "node scripts/seed-demo.mjs && node scripts/verify-demo.mjs"

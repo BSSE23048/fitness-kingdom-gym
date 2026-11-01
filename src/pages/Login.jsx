@@ -1,3 +1,4 @@
+import { isDemo } from '../config/firebase';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -61,7 +62,7 @@ const Login = () => {
           </h2>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 rounded-full text-emerald-800 text-[10px] font-bold uppercase tracking-wider">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Dual-Owner Secure Console</span>
+            <span>{isDemo ? 'Local Demo · Synthetic Data' : 'Dual-Owner Secure Console'}</span>
           </div>
           <p className="text-xs text-slate-500 pt-1">
             Sign in with your authorized owner credentials.
@@ -81,6 +82,7 @@ const Login = () => {
         )}
 
         {/* Locked Production Login Form */}
+        {isDemo && <p role="note" className="mb-4 text-sm text-slate-600">Local demo: owner@gym.test / DemoGym123! — all members are synthetic.</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -136,7 +138,7 @@ const Login = () => {
 
         {/* Secure Footer Info */}
         <div className="text-center text-[10px] text-slate-400 pt-2 border-t border-zinc-100">
-          © 2026 Fitness Kingdom Gym • Production Firebase Secured
+          {isDemo ? 'Local Firebase emulators · synthetic records' : '© 2026 Fitness Kingdom Gym • Production Firebase Secured'}
         </div>
       </motion.div>
     </div>
