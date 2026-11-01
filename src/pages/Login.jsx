@@ -1,3 +1,4 @@
+import { isDemo } from '../config/firebase';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -81,6 +82,7 @@ const Login = () => {
         )}
 
         {/* Locked Production Login Form */}
+        {isDemo && <p role="note" className="mb-4 text-sm text-slate-600">Local demo: owner@gym.test / DemoGym123! — all members are synthetic.</p>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1">

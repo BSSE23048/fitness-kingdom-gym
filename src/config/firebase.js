@@ -1,6 +1,9 @@
+import { demoConfig } from './demoRuntime';
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence, connectAuthEmulator } from 'firebase/auth';
 import { 
+  connectFirestoreEmulator,
+  memoryLocalCache,
   initializeFirestore, 
   persistentLocalCache, 
   persistentMultipleTabManager,
@@ -8,7 +11,9 @@ import {
 } from 'firebase/firestore';
 
 // Authentic Firebase configuration for Fitness Kingdom Gym
-const firebaseConfig = {
+const localDemoConfig = demoConfig(import.meta.env.MODE, window.location.hostname);
+export const isDemo = Boolean(localDemoConfig);
+const firebaseConfig = localDemoConfig || {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyC5ODFUBtqIKJl5YfQzhAYRCCQbwI-rg0Y",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "fitness-kingdom-gym.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "fitness-kingdom-gym",
@@ -21,6 +26,7 @@ const firebaseConfig = {
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
 export const auth = getAuth(app);
+if (isDemo) connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
 
 // Explicitly configure local persistence for instant session retrieval from disk
 setPersistence(auth, browserLocalPersistence).catch((err) => {
@@ -31,7 +37,7 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
 let dbInstance;
 try {
   dbInstance = initializeFirestore(app, {
-    localCache: persistentLocalCache({
+    localCache: isDemo ? memoryLocalCache() : persistentLocalCache({
       tabManager: persistentMultipleTabManager()
     })
   });
@@ -41,6 +47,7 @@ try {
 }
 
 export const db = dbInstance;
+if (isDemo) connectFirestoreEmulator(db, '127.0.0.1', 8081);
 
 export default app;
 
