@@ -1,25 +1,28 @@
-/**
- * Standard chronological 2026 month options for dropdown selectors across Gym ERP.
- * Eliminates month shuffling.
- */
-export const MONTH_OPTIONS = [
-  { value: '2026-01', label: 'January 2026' },
-  { value: '2026-02', label: 'February 2026' },
-  { value: '2026-03', label: 'March 2026' },
-  { value: '2026-04', label: 'April 2026' },
-  { value: '2026-05', label: 'May 2026' },
-  { value: '2026-06', label: 'June 2026' },
-  { value: '2026-07', label: 'July 2026' },
-  { value: '2026-08', label: 'August 2026' },
-  { value: '2026-09', label: 'September 2026' },
-  { value: '2026-10', label: 'October 2026' },
-  { value: '2026-11', label: 'November 2026' },
-  { value: '2026-12', label: 'December 2026' },
-];
+/** Local calendar months shared by billing and reporting screens. */
+export function getLocalMonth(date = new Date()) {
+  return String(date.getFullYear()) + '-' + String(date.getMonth() + 1).padStart(2, '0');
+}
+export function createMonthOptions(date = new Date()) {
+  const options = [];
+  const firstYear = Math.min(2026, date.getFullYear());
+  for (let year = firstYear; year <= date.getFullYear() + 1; year++) {
+    for (let month = 0; month < 12; month++) {
+      options.push({
+        value: String(year) + '-' + String(month + 1).padStart(2, '0'),
+        label: new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      });
+    }
+  }
+  return options;
+}
+export const MONTH_OPTIONS = createMonthOptions();
+export const DEFAULT_MONTH = getLocalMonth();
+export const getMonthLabel = monthValue =>
+  MONTH_OPTIONS.find(month => month.value === monthValue)?.label || monthValue;
 
-export const DEFAULT_MONTH = '2026-09';
-
-export const getMonthLabel = (monthValue) => {
-  const match = MONTH_OPTIONS.find(m => m.value === monthValue);
-  return match ? match.label : monthValue;
-};
+/** A billing month cannot precede a known membership start month. */
+export function isBeforeMembershipStart(member, month) {
+  const start = member.startDate;
+  return typeof start === 'string' && /^\d{4}-(0[1-9]|1[0-2])-\d{2}$/.test(start) &&
+    month < start.slice(0, 7);
+}
