@@ -4,7 +4,7 @@ A React/Firebase application for one gym to manage members, admission/monthly pa
 
 ## Status
 
-Firestore access requires a trusted owner custom claim. The maintainer supplied successful Firebase deployment output and reports passing owner login, record access, session refresh, signed-out protection and non-owner denial checks. These live results are maintainer-reported. This is a single-gym application; a separate synthetic demo is still needed.
+Firestore access requires a trusted owner custom claim. The maintainer supplied successful Firebase deployment output and reports passing owner login, record access, session refresh, signed-out protection and non-owner denial checks. These live results are maintainer-reported. This is a single-gym application. A localhost-only synthetic demo is available using Firebase emulators.
 
 ## Stack
 
@@ -51,7 +51,39 @@ The client-side PIN remains a confirmation convenience, not an additional securi
 
 ## Portfolio demo
 
-Use synthetic records to demonstrate registration, an admission payment, a monthly payment, attendance and a CSV export. Then show anonymous/non-owner database access being rejected. Capture mobile and desktop screenshots only after exercising the actual workflow; no screenshots are supplied here.
+Run a disposable local demo without production credentials or real gym records:
+
+```sh
+npm ci
+npm run demo
+```
+
+Open the loopback URL printed by Vite. Demo owner: **owner@gym.test / DemoGym123!**. These credentials apply only to local emulators. Stopping the command discards emulator data; the seed supplies three fictional members and one plan. Payments and attendance start empty so reviewers can exercise the workflow.
+
+See [demo setup and walkthrough](docs/DEMO.md). Demo mode uses the fixed `demo-fitness-kingdom` project, requires a localhost browser host and connects Auth/Firestore to local emulators. Never deploy this mode to the operational gym project.
+
+### Screenshots
+
+**Local demo with synthetic data.** Captured by the maintainer during a manual walkthrough. Displayed payments are fictional; they are not evidence of business revenue, customer usage or production results.
+
+![Synthetic demo dashboard showing monthly collection totals](docs/screenshots/dashboard.png)
+
+<details>
+<summary>Member management and fee collection</summary>
+
+![Three fictional members in the member management screen](docs/screenshots/members.png)
+
+![Synthetic monthly fees, paid status and outstanding balances](docs/screenshots/fee-collection.png)
+
+</details>
+
+### Validation and limitations
+
+- CI: 26 unit tests, four Firestore rule tests, production/demo builds, and synthetic owner access plus non-owner/anonymous denial checks passed for the billing-calendar change.
+- Maintainer walkthrough: registration and refresh persistence, admission/monthly payments, attendance, sign-out and viewer denial reported passing. Supplied desktop captures show the current month and consistent fictional payment totals.
+- Billing defaults to the local current month. Before a known membership start month, unpaid members show “Not yet joined” with no collection action; existing recorded payments remain visible.
+- Mobile behaviour, accessibility, CSV export and payroll edge cases still need dedicated validation. Screenshots do not establish those checks.
+- Other service modules need further write-failure handling review. The latest maintainer-supplied full dependency audit reports 16 moderate findings; an audit result does not prove application security.
 
 ## Contribution and use
 
