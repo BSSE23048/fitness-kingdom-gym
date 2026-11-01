@@ -75,6 +75,10 @@ See [demo setup and walkthrough](docs/DEMO.md). Demo mode uses the fixed `demo-f
 
 ![Synthetic monthly fees, paid status and outstanding balances](docs/screenshots/fee-collection.png)
 
+![Synthetic financial ledger showing two admission fees and one monthly fee totalling Rs. 12,000](docs/screenshots/financials.png)
+
+Financial ledger from the same local synthetic walkthrough; these figures do not represent actual gym revenue.
+
 </details>
 
 ### Validation and limitations
