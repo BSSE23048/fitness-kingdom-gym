@@ -4,7 +4,7 @@ A React/Firebase application for one gym to manage members, admission/monthly pa
 
 ## Status
 
-This branch replaces open database rules with trusted owner-claim authorization. It requires administrator provisioning before deployment. It is not a multi-tenant SaaS or a zero-defect system.
+Firestore access requires a trusted owner custom claim. The maintainer supplied successful Firebase deployment output and reports passing owner login, record access, session refresh, signed-out protection and non-owner denial checks. These live results are maintainer-reported. This is a single-gym application; a separate synthetic demo is still needed.
 
 ## Stack
 
@@ -12,7 +12,7 @@ React 18, JavaScript, Vite, Firebase Authentication/Firestore, Tailwind CSS and 
 
 ## Setup and checks
 
-Use Node.js 22. The Firebase CLI emulator command also requires Java 21.
+Use Node.js 22.12 or newer in the Node 22 line. The Firebase CLI emulator command also requires Java 21.
 
 ```sh
 npm ci
@@ -27,6 +27,12 @@ npm test
 npm run test:rules:ci
 npm run build
 ```
+
+## Build output and deployment
+
+`dist/` and temporary Vite configuration bundles are generated files and are not versioned. A fresh checkout must run `npm ci` and `npm run build` before a Hosting deployment. Firebase Hosting serves the locally generated `dist/` directory; removing tracked copies does not remove the deployed website.
+
+Run deployments only from a reviewed revision with the intended Firebase project configuration. Do not deploy placeholder environment settings or a portfolio demo to the operational gym project.
 
 ## Main workflows
 

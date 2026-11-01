@@ -67,3 +67,11 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Generated frontend output and temporary Vite config bundles
+/dist/
+vite.config.*.timestamp-*
+
+# Local environment files (keep only the placeholder example)
+.env.*
+!.env.example
