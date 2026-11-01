@@ -1,9 +1,13 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Only trusted Admin SDK provisioning may assign the owner custom claim.
+    // Browser profiles, localStorage and confirmation PINs cannot grant access.
+    function isOwner() {
+      return request.auth != null && request.auth.token.owner == true;
+    }
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if isOwner();
     }
   }
 }

@@ -1,101 +1,54 @@
-# Fitness Kingdom Gym — Management Portal & Executive ERP
+# Fitness Kingdom Gym — Member and Payment Portal
 
-![Fitness Kingdom Gym ERP](https://img.shields.io/badge/Fitness%20Kingdom-Management%20Portal-emerald?style=for-the-badge&logo=react)
-![Firebase Spark Safe](https://img.shields.io/badge/Firebase-Spark%20Plan%20Safe-amber?style=for-the-badge&logo=firebase)
-![Dual Owner Security](https://img.shields.io/badge/Security-Dual%20Owner%20PIN%201234-blue?style=for-the-badge&logo=firebase)
-![Mobile First](https://img.shields.io/badge/Mobile--First-Responsive-purple?style=for-the-badge&logo=tailwindcss)
+A React/Firebase application for one gym to manage members, admission/monthly payments, attendance, expenses and trainer payroll.
 
-A production-grade, zero-defect **Executive Management Portal & Member CRM System** custom-architected for **Fitness Kingdom Gym**. Runs 100% on the client-side with zero external API fees or backend server costs (Firebase Spark Tier safe).
+## Status
 
-- **Production Live URL**: [https://fitness-kingdom-gym.web.app](https://fitness-kingdom-gym.web.app)
+This branch replaces open database rules with trusted owner-claim authorization. It requires administrator provisioning before deployment. It is not a multi-tenant SaaS or a zero-defect system.
 
----
+## Stack
 
-## 🏛️ Dual-Owner Multi-Tenant Architecture & Security
+React 18, JavaScript, Vite, Firebase Authentication/Firestore, Tailwind CSS and Recharts.
 
-The system is secured by Firebase Authentication with dynamic profile resolution for the dual-owner executive team:
+## Setup and checks
 
-- **Owner 1**: `ahmad@fitnesskingdom.com` → Display Name: **Ahmad** (`Role: OWNER`)
-- **Owner 2**: `mohsin@fitnesskingdom.com` → Display Name: **Mohsin** (`Role: OWNER`)
+Use Node.js 22. The Firebase CLI emulator command also requires Java 21.
 
-### 🔑 Security & Authorization Controls
-1. **Instant Session Hydration**: Owner display names and security tokens are cached locally for sub-second page loads without full-screen spinners.
-2. **Owner Security PIN (`1234`)**: Sensitive operations (deleting members, voiding payments, rolling back transactions, deleting expenses, removing trainers) strictly require security PIN `1234` verification via `PinConfirmModal`.
-3. **Owner Profile & Password Updates**: Owners can update their display name and login password inside **Gym Plans & Settings** with mandatory `reauthenticateWithCredential` security verification.
-
----
-
-## 📋 Comprehensive Operational Workflow Manual
-
-### Step 1: Client Registration & Member CRM Onboarding
-1. Navigate to **Member CRM** (`/members`) and click **Add New Member**.
-2. **Strict Validations Enforced**:
-   - **Pakistani Phone Number**: Must start with country code `92` followed by 10 digits (e.g. `923001234567`). Auto-sanitizes spaces, dashes, or leading zeros (`0300...` → `92300...`).
-   - **13-Digit CNIC / National ID**: Must be exactly 13 numeric digits without hyphens (e.g. `3520112345671`).
-3. **Sequential Member ID**: Generates an atomic sequential ID (`FK-001`, `FK-002`, `FK-003`...).
-4. **Decoupled Billing Setup**: Member profiles are registered without creating ghost monthly dues. Admission fees (Rs. 2,000 default) can be collected or marked as **Waive Off**.
-
-### Step 2: One-Time Admission Fee Collection
-1. Navigate to **Fee Collection Module** → **Tab 2: One-Time Registration / Admission Fees**.
-2. Unpaid non-waived admission fees queue under pending admission dues.
-3. Click **Collect Admission Fee**, select payment method (Cash / Bank Transfer), and record payment.
-4. Generates a deterministic document key (`admission_${memberId}`) in Firestore.
-
-### Step 3: Recurring Monthly Membership Fees & Defaulters
-1. Navigate to **Fee Collection Module** → **Tab 1: Recurring Monthly Membership Fees**.
-2. Select the target billing month (e.g., **September 2026**).
-3. **Billing Logic**:
-   - Members on 1-month plans show as **UNPAID / DEFAULTER ⚠️** on the 1st of each month.
-   - Members on advance 3-month deals automatically show as **PAID (Covered under 3-Month Plan)** for their duration.
-   - Members with frozen subscriptions show as **FROZEN ❄️** (billing paused).
-4. Click **Collect Fee** to record payment. Generates a deterministic document key (`monthly_${memberId}_${selectedMonth}`) to prevent duplicate billing.
-
-### Step 4: WhatsApp Automated Fee Follow-Up (Zero-Cost `wa.me`)
-1. In **Fee Collection**, click the **WhatsApp button** next to any unpaid member.
-2. Generates an instant WhatsApp deep link (`https://wa.me/923001234567?text=...`) with pre-filled English reminder text:
-   > *"Dear [Member Name], this is a formal reminder from Fitness Kingdom Gym that your membership dues of Rs. [Amount] for the month of [Month] are currently pending. Kindly clear your dues at the reception counter. Thank you!"*
-
-### Step 5: Gym Cashflow, Expenses & Trainer Payroll
-1. Navigate to **Financials & Expenses** (`/financials`).
-2. **Strict Cash Basis Ledger**:
-   - **Total Revenue**: Sum of actual confirmed payments in Firestore for the selected month (Recurring Fees + Admission Fees). Zero ghost revenue from unpaid members.
-   - **Operational Expenses**: Record rent, electricity, equipment maintenance under `expenses`.
-   - **Trainer Payroll**: Calculated dynamically (`Base Salary + Commission - Deductions`) from active PT clients.
-   - **Net Cashflow**: `Total Collected Revenue - (Expenses + Paid Payroll)`.
-
-### Step 6: Reception Attendance & One-Click CSV Exports
-1. Navigate to **Daily Attendance** (`/attendance`) for paper-desk sync check-ins.
-2. Click **Export CSV** on any module to download client-side spreadsheets:
-   - **Fee Dues Export**: `Fee_Dues_[Month].csv`
-   - **Members Directory Export**: `Active_Members_List.csv`
-   - **Expenses Ledger Export**: `Gym_Expenses_[Month].csv`
-
----
-
-## ⚡ Technical Architecture & Offline Resilience
-
-- **Offline-First Storage**: Configured with `initializeFirestore` using `persistentLocalCache` and `persistentMultipleTabManager` for uninterrupted reception operation during internet outages.
-- **Dynamic Code Splitting**: Heavy page routes (`Dashboard`, `Members`, `FeeCollection`, `Financials`) use `React.lazy()` wrapped in `<Suspense fallback={<PageSkeletonLoader />}>`.
-- **Vendor Chunk Optimization**: `vite.config.js` splits vendor bundles (`firebase-vendor`, `charts-vendor`, `ui-vendor`) to maintain individual chunks under 300kb.
-- **Mobile-First UX**: Responsive shell converts to a left slide-out drawer on mobile (<1024px). Data tables transform into touch-friendly cards on phone screens.
-
----
-
-## 🚀 Deployment & Maintenance
-
-### Build & Deploy to Firebase Hosting
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Test production build
-npm run build
-
-# 3. Deploy to Firebase Cloud Hosting
-firebase deploy
+```sh
+npm ci
+cp .env.example .env.local
+npm run dev
 ```
 
----
+On Windows, use `Copy-Item .env.example .env.local`. Configure a separate Firebase test project with synthetic member/payment records. Read [owner-access setup](docs/OWNER-ACCESS.md) before using any privileged workflow.
 
-## 📄 License
-Custom built for **Fitness Kingdom Gym**. All rights reserved.
+```sh
+npm test
+npm run test:rules:ci
+npm run build
+```
+
+## Main workflows
+
+- Member registration, membership status, renewal and freeze/unfreeze.
+- Separate admission and recurring monthly fee workflows.
+- Payment records, expenses, attendance, trainer payroll and CSV exports.
+- Owner profile/password settings and WhatsApp reminder links.
+
+These are implementation areas, not a claim that every edge case has passed a live acceptance test. WhatsApp links prepare messages; they do not send automated reminders.
+
+## Authorization
+
+Firestore permits access only to users with a trusted boolean `owner` custom claim. A stored profile role, email address, cached browser value or confirmation PIN does not authorize database operations. Owner provisioning must use trusted Admin SDK credentials outside the repository.
+
+The client-side PIN remains a confirmation convenience, not an additional security factor. Member mutations reject failed writes before updating their cache. Registration keeps entered details for retry; member and attendance actions display an error. Ten unit tests cover write rejection and confirmed-write cache behaviour. Other service modules still need a separate failure-handling review.
+
+## Portfolio demo
+
+Use synthetic records to demonstrate registration, an admission payment, a monthly payment, attendance and a CSV export. Then show anonymous/non-owner database access being rejected. Capture mobile and desktop screenshots only after exercising the actual workflow; no screenshots are supplied here.
+
+## Contribution and use
+
+Repository maintainer: [Agha Shoaib Zaib](https://github.com/BSSE23048). This is business-specific software; keep real member, payment and identity information out of demos and source control.
+
+Custom built for Fitness Kingdom Gym. All rights reserved.
