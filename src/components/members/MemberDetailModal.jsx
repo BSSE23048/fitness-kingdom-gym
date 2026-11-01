@@ -379,7 +379,7 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
                       </button>
                     ) : (
                       <button
-                        onClick={() => setShowFreezeModal(true)}
+                        onClick={() => { setActionError(''); setShowFreezeModal(true); }}
                         className="flex flex-col items-center justify-center p-3 rounded-2xl bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 font-bold text-xs transition-all hover:scale-105"
                       >
                         <Snowflake className="w-5 h-5 mb-1 text-sky-600" />
@@ -388,7 +388,7 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
                     )}
 
                     <button
-                      onClick={() => setShowRenewModal(true)}
+                      onClick={() => { setActionError(''); setShowRenewModal(true); }}
                       className="flex flex-col items-center justify-center p-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-800 font-bold text-xs transition-all hover:scale-105"
                     >
                       <RefreshCw className="w-5 h-5 mb-1 text-indigo-600" />
@@ -472,6 +472,7 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
                     exit={{ scale: 0.9, opacity: 0 }}
                     className="bg-white rounded-3xl p-6 w-full max-w-sm border border-zinc-200 shadow-2xl space-y-4"
                   >
+                    {actionError && <p role="alert" className="p-3 rounded-xl bg-rose-50 text-rose-800 text-sm">{actionError}</p>}
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold">
                         <Snowflake className="w-5 h-5" />
@@ -525,6 +526,7 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
                     exit={{ scale: 0.9, opacity: 0 }}
                     className="bg-white rounded-3xl p-6 w-full max-w-sm border border-zinc-200 shadow-2xl space-y-4"
                   >
+                    {actionError && <p role="alert" className="p-3 rounded-xl bg-rose-50 text-rose-800 text-sm">{actionError}</p>}
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
                         <RefreshCw className="w-5 h-5" />
