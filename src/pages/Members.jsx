@@ -48,6 +48,7 @@ const Members = () => {
 
   // Banner toast state
   const [toastMessage, setToastMessage] = useState('');
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     loadMembersData();
@@ -70,20 +71,26 @@ const Members = () => {
   };
 
   const handleRegisterMember = async (payload) => {
+    setActionError('');
+    setToastMessage('');
     try {
       const newMember = await addMember(payload);
       const admissionMsg = newMember.admissionFee > 0 
-        ? `Admission Fee logged: ${formatPKR(newMember.admissionFee)}.` 
+        ? `Admission fee due: ${formatPKR(newMember.admissionFee)}.` 
         : 'Admission Fee waived off.';
       setToastMessage(`Member ${newMember.fullName} registered as ${newMember.id}! ${admissionMsg} Monthly fee is UNPAID until collected in Fee Collection. ✨`);
       await loadMembersData();
       setTimeout(() => setToastMessage(''), 5000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not save the member. Your details have been kept; please retry.');
+      throw err;
     }
   };
 
   const handleDeleteMemberConfirm = async () => {
+    setActionError('');
+    setToastMessage('');
     if (!deletingMemberId) return;
     try {
       await deleteMember(deletingMemberId);
@@ -94,10 +101,14 @@ const Members = () => {
       setTimeout(() => setToastMessage(''), 4000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not delete the member. The record has not been removed.');
+      throw err;
     }
   };
 
   const handleQuickCheckIn = async (member, e) => {
+    setActionError('');
+    setToastMessage('');
     e.stopPropagation();
     try {
       await markMemberAttendance(member.id, member.fullName, 'Reception Quick Action');
@@ -105,6 +116,7 @@ const Members = () => {
       setTimeout(() => setToastMessage(''), 3000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not save attendance. Please retry.');
     }
   };
 
@@ -164,6 +176,7 @@ const Members = () => {
 
   return (
     <div className="space-y-6">
+      {actionError && <div role="alert" className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">{actionError}</div>}
       {/* Toast Notification Banner */}
       <AnimatePresence>
         {toastMessage && (

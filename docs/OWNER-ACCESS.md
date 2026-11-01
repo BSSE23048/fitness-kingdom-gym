@@ -26,6 +26,7 @@ Use Node 22 and Java 21 for the current Firebase CLI:
 
 ```sh
 npm ci
+npm test
 npm run test:rules:ci
 npm run build
 ```
@@ -34,4 +35,4 @@ The emulator test configuration uses only localhost and the `demo-fitness-kingdo
 
 ## Remaining limits
 
-Owner claims authorize all records in this single gym. Field validation and business invariants need further rules coverage. The fixed client-side PIN is only an accidental-action confirmation, not a security factor. Existing service functions can swallow persistence failures; that separate correctness issue is not repaired here.
+Owner claims authorize all records in this single gym. Field validation and business invariants need further rules coverage. The fixed client-side PIN is only an accidental-action confirmation, not a security factor. Member mutations now reject persistence failures before cache changes, with unit coverage. Other service modules still require a separate correctness review.

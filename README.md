@@ -23,6 +23,7 @@ npm run dev
 On Windows, use `Copy-Item .env.example .env.local`. Configure a separate Firebase test project with synthetic member/payment records. Read [owner-access setup](docs/OWNER-ACCESS.md) before using any privileged workflow.
 
 ```sh
+npm test
 npm run test:rules:ci
 npm run build
 ```
@@ -40,7 +41,7 @@ These are implementation areas, not a claim that every edge case has passed a li
 
 Firestore permits access only to users with a trusted boolean `owner` custom claim. A stored profile role, email address, cached browser value or confirmation PIN does not authorize database operations. Owner provisioning must use trusted Admin SDK credentials outside the repository.
 
-The client-side PIN remains a confirmation convenience, not an additional security factor. Existing service functions can suppress persistence errors; a follow-up should ensure failed writes cannot appear successful.
+The client-side PIN remains a confirmation convenience, not an additional security factor. Member mutations reject failed writes before updating their cache. Registration keeps entered details for retry; member and attendance actions display an error. Ten unit tests cover write rejection and confirmed-write cache behaviour. Other service modules still need a separate failure-handling review.
 
 ## Portfolio demo
 

@@ -33,6 +33,7 @@ const MemberModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   const [admissionFeeWaived, setAdmissionFeeWaived] = useState(false);
   
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   // Validation Error States
   const [phoneError, setPhoneError] = useState('');
@@ -102,6 +103,7 @@ const MemberModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
   };
 
   const resetFormState = () => {
+    setSubmitError('');
     setFullName('');
     setPhone('');
     setEmergencyContact('');
@@ -138,6 +140,7 @@ const MemberModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
 
     const pErr = validatePhone(phone);
     const cErr = validateCnic(cnicOrId);
@@ -180,6 +183,7 @@ const MemberModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       onClose();
     } catch (err) {
       console.error('Registration submit error:', err);
+      setSubmitError('Could not save this member. Your details are still here; please retry.');
     } finally {
       setLoading(false);
     }
@@ -240,6 +244,7 @@ const MemberModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
 
             {/* Form Content */}
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+              {submitError && <p role="alert" className="p-3 rounded-xl bg-rose-50 text-rose-800 text-sm">{submitError}</p>}
               {/* Personal Information */}
               <div className="space-y-3">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-600 flex items-center gap-1.5">

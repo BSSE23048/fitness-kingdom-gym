@@ -36,9 +36,8 @@ export const getNextMemberId = async () => {
 
     return `FK-${String(newCount).padStart(3, '0')}`;
   } catch (err) {
-    console.warn('Firestore transaction failed, generating fallback FK ID:', err);
-    const fallbackCount = (cachedMembers.length || 0) + 1;
-    return `FK-${String(fallbackCount).padStart(3, '0')}`;
+    // Never guess a sequential ID after a failed authoritative reservation.
+    throw err;
   }
 };
 
@@ -190,6 +189,7 @@ export const addMember = async (memberPayload) => {
     await setDoc(docRef, fullRecord);
   } catch (err) {
     console.warn('Firestore setDoc failed:', err);
+    throw err;
   }
 
   cachedMembers.unshift(fullRecord);
@@ -197,7 +197,7 @@ export const addMember = async (memberPayload) => {
 };
 
 /**
- * Delete Member from Firestore (Protected by Owner PIN 1234)
+ * Delete after Firestore authorization; update the cache only on success.
  */
 export const deleteMember = async (memberId) => {
   try {
@@ -205,6 +205,7 @@ export const deleteMember = async (memberId) => {
     await deleteDoc(docRef);
   } catch (err) {
     console.warn('Firestore deleteMember failed:', err);
+    throw err;
   }
   cachedMembers = cachedMembers.filter(m => m.id !== memberId);
 };
@@ -226,6 +227,7 @@ export const freezeMembership = async (memberId, freezeReason = 'Personal Reques
     await updateDoc(docRef, updates);
   } catch (err) {
     console.warn('Firestore freeze update failed:', err);
+    throw err;
   }
 
   const idx = cachedMembers.findIndex(m => m.id === memberId);
@@ -271,6 +273,7 @@ export const unfreezeMembership = async (memberId) => {
     await updateDoc(docRef, updates);
   } catch (err) {
     console.warn('Firestore unfreeze update failed:', err);
+    throw err;
   }
 
   if (idx !== -1) {
@@ -308,6 +311,7 @@ export const renewMembership = async (memberId, planName, durationMonths, feeAmo
     await updateDoc(docRef, updates);
   } catch (err) {
     console.warn('Firestore renewal update failed:', err);
+    throw err;
   }
 
   if (idx !== -1) {
@@ -324,6 +328,7 @@ export const updateMemberDetails = async (memberId, updates) => {
     await updateDoc(docRef, updates);
   } catch (err) {
     console.warn('Firestore updateMemberDetails failed:', err);
+    throw err;
   }
 
   const idx = cachedMembers.findIndex(m => m.id === memberId);
@@ -352,6 +357,7 @@ export const markMemberAttendance = async (memberId, memberName, markedBy = 'Rec
     await addDoc(attColRef, attendanceRecord);
   } catch (err) {
     console.warn('Firestore attendance addDoc failed:', err);
+    throw err;
   }
 
   if (!cachedAttendance[memberId]) {

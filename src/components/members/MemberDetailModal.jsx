@@ -30,6 +30,7 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
   const [attendanceLogs, setAttendanceLogs] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [actionMessage, setActionMessage] = useState('');
+  const [actionError, setActionError] = useState('');
 
   // Modals for Freeze, Unfreeze, Renew & Edit actions
   const [showFreezeModal, setShowFreezeModal] = useState(false);
@@ -52,6 +53,8 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
 
   useEffect(() => {
     if (member && isOpen) {
+      setActionError('');
+      setActionMessage('');
       loadAttendance();
       loadPlans();
       setEditPhone(member.phone || '');
@@ -121,6 +124,8 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
 
   // Quick Action Handler: Mark Attendance
   const handleMarkAttendance = async () => {
+    setActionError('');
+    setActionMessage('');
     try {
       const record = await markMemberAttendance(member.id, member.fullName, 'Reception');
       setAttendanceLogs([record, ...attendanceLogs]);
@@ -128,11 +133,14 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not save attendance. Please retry.');
     }
   };
 
   // Quick Action Handler: Freeze Membership
   const handleFreezeConfirm = async () => {
+    setActionError('');
+    setActionMessage('');
     try {
       await freezeMembership(member.id, freezeReason);
       setShowFreezeModal(false);
@@ -141,11 +149,14 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not freeze membership. Please retry.');
     }
   };
 
   // Quick Action Handler: UNFREEZE Membership (Shifts end date forward)
   const handleUnfreezeConfirm = async () => {
+    setActionError('');
+    setActionMessage('');
     try {
       await unfreezeMembership(member.id);
       setActionMessage('Membership unfrozen & expiry date shifted forward! ⚡');
@@ -153,11 +164,14 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not unfreeze membership. Please retry.');
     }
   };
 
   // Quick Action Handler: Renew Membership
   const handleRenewConfirm = async () => {
+    setActionError('');
+    setActionMessage('');
     try {
       await renewMembership(member.id, renewPlanName, renewDuration, renewFee);
       setShowRenewModal(false);
@@ -166,11 +180,14 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not renew membership. Please retry.');
     }
   };
 
   // Save Edit Profile
   const handleSaveProfileEdit = async (e) => {
+    setActionError('');
+    setActionMessage('');
     e.preventDefault();
     setSavingEdit(true);
     try {
@@ -185,6 +202,7 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
       setTimeout(() => setActionMessage(''), 3000);
     } catch (err) {
       console.error(err);
+      setActionError('Could not save member details. Please retry.');
     } finally {
       setSavingEdit(false);
     }
@@ -245,6 +263,7 @@ const MemberDetailModal = ({ isOpen, onClose, member, onMemberUpdated }) => {
 
             {/* Profile Drawer Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {actionError && <p role="alert" className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">{actionError}</p>}
               {/* Notification Banner */}
               {actionMessage && (
                 <motion.div
