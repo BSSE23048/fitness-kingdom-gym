@@ -108,7 +108,7 @@ const Login = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label htmlFor="owner-password" className="block text-xs font-semibold text-slate-700 mb-1">
               Password
             </label>
             <div className="relative">
